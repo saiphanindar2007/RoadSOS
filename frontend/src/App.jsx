@@ -13,6 +13,7 @@ import ServicesList          from "./components/ServicesList";
 import SeverityPredictor     from "./components/SeverityPredictor";
 import StatsPanel            from "./components/StatsPanel";
 import EmergencyModal        from "./components/EmergencyModal";
+import AutoSOSModal          from "./components/AutoSOSModal";
 import VoiceSOS              from "./components/VoiceSOS";
 import GoldenHourTimer       from "./components/GoldenHourTimer";
 import MedicalIDCard         from "./components/MedicalIDCard";
@@ -162,6 +163,7 @@ export default function App() {
   const [severityResult,  setSeverityResult]  = useState(null);
   const [stats,           setStats]           = useState(null);
   const [modal,           setModal]           = useState(false);
+  const [autoSOSActive, setAutoSOSActive]     = useState(false);
   const [selectedSvc,     setSelectedSvc]     = useState(null);
 
   const [goldenHourStart,  setGoldenHourStart]  = useState(null);
@@ -286,7 +288,8 @@ export default function App() {
     }
   }, [goldenHourStart, user, location]);
 
-  useShakeDetect(openSOS);
+  const handleShake = useCallback(() => setAutoSOSActive(true), []);
+  useShakeDetect(handleShake);
 
   const handleFilter = f => {
     setFilter(f); filterRef.current = f;
@@ -410,6 +413,17 @@ export default function App() {
         {modal && (
           <EmergencyModal service={selectedSvc} services={services} result={severityResult}
             onClose={() => { setModal(false); setSelectedSvc(null); }} goldenElapsed={goldenElapsed} />
+        )}
+      </AnimatePresence>
+
+      {/* AutoSOS — triggered by crash detection shake */}
+      <AnimatePresence>
+        {autoSOSActive && (
+          <AutoSOSModal
+            services={services}
+            location={location}
+            onCancel={() => setAutoSOSActive(false)}
+          />
         )}
       </AnimatePresence>
     </div>
