@@ -19,7 +19,7 @@ import GoldenHourTimer       from "./components/GoldenHourTimer";
 import MedicalIDCard         from "./components/MedicalIDCard";
 import { useShakeDetect }    from "./hooks/useShakeDetect";
 
-const API = "";
+const API = import.meta.env.VITE_API_BASE_URL || "";
 
 function distKm(lat1, lng1, lat2, lng2) {
   const R    = 6371;
