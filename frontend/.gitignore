@@ -1,4 +1,5 @@
 # Environment files — NEVER commit these
+.env
 frontend/.env
 frontend/.env.local
 backend/.env
