@@ -1,16 +1,31 @@
-# React + Vite
+# 🚨 RoadSoS — AI Emergency Response System
+### National Road Safety Hackathon 2026 | CoERS × IIT Madras
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Live Demo
+- Frontend: [roadsos.vercel.app](https://roadsos.vercel.app)
+- Backend API: [roadsos-api.railway.app](https://roadsos-api.railway.app)
 
-Currently, two official plugins are available:
+## Features
+- 🗺️ Live location tracking with Google Maps
+- 🤖 AI accident severity prediction (Random Forest)
+- 🚑 Real-time nearby emergency services
+- 📳 Crash detection via device motion (shake-to-SOS)
+- 🎙️ Voice-activated emergency trigger
+- 📊 Admin dashboard with live SOS map
+- 🌧️ Live weather road risk integration
+- 🪪 Emergency Medical ID with QR code
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Tech Stack
+- Frontend: React + Vite + Tailwind CSS + Google Maps
+- Backend: FastAPI + Python + scikit-learn
+- Database: Supabase (PostgreSQL + Auth + Realtime)
+- ML: Random Forest (accident severity prediction)
+- Maps: Google Maps JavaScript API
 
-## React Compiler
+## Setup
+See `.env.example` for required environment variables.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Team
+- Built for: National Road Safety Hackathon 2026
+- Theme: AI in Road Safety
+- Topic: RoadSoS (Problem 3)

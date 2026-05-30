@@ -1,5 +1,22 @@
+# Environment files — NEVER commit these
+frontend/.env
+frontend/.env.local
+backend/.env
+
+# Dependencies
 node_modules/
-dist/
-.env
-.env.local
-*.local
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+frontend/.vite/
+
+# Python
+backend/__pycache__/
+backend/model/*.pkl
+*.pyc
+.Python
+
+# OS
+.DS_Store
+Thumbs.db
