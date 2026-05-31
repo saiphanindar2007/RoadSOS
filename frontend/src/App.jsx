@@ -107,8 +107,8 @@ const PAGE = {
   initial:{opacity:0,y:18}, animate:{opacity:1,y:0},
   exit:{opacity:0,y:-12},   transition:{duration:0.28},
 };
-const WATCH_OPTS = { enableHighAccuracy:true, maximumAge:4000, timeout:15000 };
-const REFETCH_KM = 0.25;
+const WATCH_OPTS = { enableHighAccuracy:true, maximumAge:0, timeout:30000 };
+const REFETCH_KM = 0.02;
 
 // ── GPS Permission Banner ─────────────────────────────────
 function GPSBanner({ onLocationGranted }) {
