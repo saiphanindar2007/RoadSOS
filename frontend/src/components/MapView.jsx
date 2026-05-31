@@ -94,7 +94,6 @@ export default function MapView({ location, services, filter, onFilterChange, on
   useEffect(() => {
     if (mapRef.current && location) {
       mapRef.current.panTo({ lat: location.lat, lng: location.lng });
-      mapRef.current.setZoom(15);
     }
   }, [location?.lat, location?.lng]); // eslint-disable-line
 
