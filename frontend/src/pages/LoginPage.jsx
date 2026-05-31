@@ -191,8 +191,7 @@ export default function LoginPage() {
 
         {/* Demo hint */}
         <p className="text-center text-xs text-slate-600 mt-4">
-          Admin? Run in Supabase SQL:{" "}
-          <code className="text-amber-600">UPDATE profiles SET role='admin' WHERE email='youremail@...'</code>
+          <code className="text-amber-600"></code>
         </p>
       </motion.div>
     </div>
