@@ -291,13 +291,10 @@ export default function App() {
   const handleShake = useCallback(() => setAutoSOSActive(true), []);
   useShakeDetect(handleShake);
 
-  const handleFilter = useCallback((f) => {
-    setFilter(f);
-    filterRef.current = f;
-    // Use last known location OR default
-    const loc = location || lastFetchLocRef.current || { lat:17.3850, lng:78.4867 };
-    fetchServices(loc.lat, loc.lng, f);
-  }, [location, fetchServices]);
+  const handleFilter = f => {
+    setFilter(f); filterRef.current = f;
+    if (location) fetchServices(location.lat, location.lng, f);
+  };
 
   const openService = svc => {
     setSelectedSvc(svc); setModal(true);
