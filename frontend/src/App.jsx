@@ -66,41 +66,6 @@ function getMock(lat, lng) {
   }).sort((a,b) => a.distance - b.distance);
 }
 
-const AMENITY_MAP = {
-  all:      "hospital|clinic|doctors|nursing_home|health_centre|pharmacy|police|fire_station|ambulance_station",
-  hospital: "hospital|clinic|doctors|nursing_home|health_centre",
-  police:   "police",
-  fire:     "fire_station|ambulance_station",
-  pharmacy: "pharmacy",
-};
-
-async function fetchFromOverpass(lat, lng, f = "all") {
-  const amenities = AMENITY_MAP[f] || AMENITY_MAP.all;
-  const query = `[out:json][timeout:20];(node["amenity"~"${amenities}"](around:5000,${lat},${lng});way["amenity"~"${amenities}"](around:5000,${lat},${lng}););out center;`;
-  const res = await fetch("https://overpass-api.de/api/interpreter", {
-    method:"POST",
-    headers:{"Content-Type":"application/x-www-form-urlencoded"},
-    body:`data=${encodeURIComponent(query)}`,
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
-  const svcs = (json.elements||[]).map(el => {
-    const tags = el.tags||{};
-    const elat = el.type==="node" ? el.lat : el.center?.lat;
-    const elng = el.type==="node" ? el.lon : el.center?.lon;
-    if (!elat||!elng) return null;
-    const d    = distKm(lat, lng, elat, elng);
-    return {
-      id:el.id, name:tags.name||tags["name:en"]||tags["name:te"]||"Emergency Service",
-      amenity:tags.amenity, type:mapType(tags.amenity),
-      lat:elat, lng:elng, distance:d, distance_text:fmtDist(d),
-      phone:tags.phone||tags["contact:phone"]||null,
-      opening_hours:tags.opening_hours||"24/7",
-      address:[tags["addr:street"],tags["addr:suburb"],tags["addr:city"]].filter(Boolean).join(", ")||null,
-    };
-  }).filter(Boolean).sort((a,b)=>a.distance-b.distance);
-  return svcs;
-}
 
 // ─────────────────────────────────────────────────────────
 const PAGE = {
@@ -108,7 +73,7 @@ const PAGE = {
   exit:{opacity:0,y:-12},   transition:{duration:0.28},
 };
 const WATCH_OPTS = { enableHighAccuracy:true, maximumAge:4000, timeout:15000 };
-const REFETCH_KM = 0.25;
+const REFETCH_KM = 0.03;
 
 // ── GPS Permission Banner ─────────────────────────────────
 function GPSBanner({ onLocationGranted }) {
@@ -188,17 +153,37 @@ export default function App() {
   }, [goldenHourStart]);
 
   // ── Service fetcher ───────────────────────────────────
-  const fetchServices = useCallback(async (lat, lng, f="all") => {
-    setLoadingSvc(true);
-    try {
-      const svcs = await fetchFromOverpass(lat, lng, f);
-      setServices(svcs.length > 0 ? svcs : getMock(lat, lng));
-    } catch {
+  const fetchServices = useCallback(async (lat, lng, f = "all") => {
+  setLoadingSvc(true);
+  try {
+    const { data } = await axios.get(
+      `${API}/api/nearby-services`,
+      {
+        params: {
+          lat,
+          lng,
+          radius: 5000,
+          service_type: f,
+        },
+        timeout: 15000,
+      }
+    );
+    const svcs = data.services || [];
+    if (svcs.length > 0) {
+      setServices(svcs);
+    } else {
       setServices(getMock(lat, lng));
-    } finally {
-      setLoadingSvc(false);
     }
-  }, []);
+  } catch (err) {
+    console.warn(
+      "Backend services failed:",
+      err.message
+    );
+    setServices(getMock(lat, lng));
+  } finally {
+    setLoadingSvc(false);
+  }
+}, []);
 
   // ── Handler when user manually grants GPS ─────────────
   const handleLocationGranted = useCallback((loc) => {
@@ -291,10 +276,18 @@ export default function App() {
   const handleShake = useCallback(() => setAutoSOSActive(true), []);
   useShakeDetect(handleShake);
 
-  const handleFilter = f => {
-    setFilter(f); filterRef.current = f;
-    if (location) fetchServices(location.lat, location.lng, f);
-  };
+  const handleFilter = (f) => {
+  setFilter(f);
+  filterRef.current = f;
+
+  const loc =
+    location ||
+    lastFetchLocRef.current;
+
+  if (loc) {
+    fetchServices(loc.lat, loc.lng, f);
+  }
+};
 
   const openService = svc => {
     setSelectedSvc(svc); setModal(true);
