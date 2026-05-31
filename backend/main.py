@@ -8,6 +8,8 @@ Endpoints:
   GET  /api/accident-stats     analytics data
 """
 
+from xmlrpc import client
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -173,48 +175,29 @@ async def nearby_services(
 out center;
 """
     try:
-        async with httpx.AsyncClient(timeout=20.0) as client:
+        headers = {
+            "User-Agent": "RoadSOS/1.0",
+            "Accept": "application/json"
+        }
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 "https://overpass-api.de/api/interpreter",
-                data={"data": query}
+                data=query,
+                headers=headers
             )
+
+            resp.raise_for_status()
+
             osm = resp.json()
 
-        services = []
-        for el in osm.get("elements", []):
-            tags  = el.get("tags", {})
-            name  = tags.get("name") or tags.get("name:en") or "Emergency Service"
-            am    = tags.get("amenity","other")
-            if el["type"] == "node":
-                elat, elng = el["lat"], el["lon"]
-            else:
-                elat = el.get("center",{}).get("lat", lat)
-                elng = el.get("center",{}).get("lon", lng)
-
-            dist = haversine(lat, lng, elat, elng)
-            services.append({
-                "id":           el["id"],
-                "name":         name,
-                "type":         map_type(am),
-                "amenity":      am,
-                "lat":          elat,
-                "lng":          elng,
-                "distance":     round(dist, 2),
-                "distance_text": fmt_dist(dist),
-                "phone":        tags.get("phone") or tags.get("contact:phone"),
-                "address":      build_addr(tags),
-                "opening_hours": tags.get("opening_hours", "24/7 Emergency"),
-                "emergency":    tags.get("emergency"),
-            })
-
-        services.sort(key=lambda x: x["distance"])
-        if not services:
-            return {"services": mock_services(lat, lng), "count": 5, "source": "mock"}
-        return {"services": services[:20], "count": len(services), "source": "OpenStreetMap"}
-
     except Exception as e:
-        print(f"Overpass API error: {e} — using mock data")
-        return {"services": mock_services(lat, lng), "count": 5, "source": "mock"}
+        print("OVERPASS ERROR:", str(e))
+
+    raise HTTPException(
+        status_code=500,
+        detail=f"Overpass API failed: {str(e)}"
+    )
 
 @app.get("/api/accident-stats")
 def accident_stats():
