@@ -44,63 +44,53 @@ function fmtDist(km) {
 }
 
 function getMock(lat, lng) {
-  return [
-    { id:1,  name:"City Government Hospital",  amenity:"hospital",         phone:"108", opening_hours:"24/7",      dlat:0.012,  dlng:0.008  },
-    { id:2,  name:"Apollo Multispeciality",     amenity:"hospital",         phone:"104", opening_hours:"24/7",      dlat:0.018,  dlng:0.005  },
-    { id:3,  name:"District Govt Clinic",       amenity:"clinic",           phone:"104", opening_hours:"8AM-8PM",   dlat:0.006,  dlng:0.011  },
-    { id:4,  name:"Sri Sai Nursing Home",       amenity:"nursing_home",     phone:null,  opening_hours:"24/7",      dlat:0.009,  dlng:-0.013 },
-    { id:5,  name:"PHC Health Centre",          amenity:"health_centre",    phone:"104", opening_hours:"8AM-5PM",   dlat:-0.005, dlng:0.008  },
-    { id:6,  name:"MedPlus Pharmacy",           amenity:"pharmacy",         phone:null,  opening_hours:"7AM-11PM",  dlat:0.004,  dlng:-0.011 },
-    { id:7,  name:"Apollo Pharmacy",            amenity:"pharmacy",         phone:null,  opening_hours:"24/7",      dlat:0.014,  dlng:0.017  },
-    { id:8,  name:"Police Control Room",        amenity:"police",           phone:"100", opening_hours:"24/7",      dlat:-0.009, dlng:0.014  },
-    { id:9,  name:"Fire & Rescue Station",      amenity:"fire_station",     phone:"101", opening_hours:"24/7",      dlat:-0.016, dlng:-0.007 },
-    { id:10, name:"Ambulance Dispatch Centre",  amenity:"ambulance_station",phone:"108", opening_hours:"24/7",      dlat:0.005,  dlng:-0.013 },
-  ].map(p => {
-    const sLat = lat + p.dlat, sLng = lng + p.dlng;
-    const d    = distKm(lat, lng, sLat, sLng);
+  const haversine = (la1,lo1,la2,lo2) => {
+    const R=6371,dL=(la2-la1)*Math.PI/180,dO=(lo2-lo1)*Math.PI/180;
+    const a=Math.sin(dL/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dO/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  };
+  const pts = [
+    {id:1, name:"City Government Hospital",   type:"hospital", phone:"108", dlat:0.012, dlng:0.008,  op:"24/7"},
+    {id:2, name:"Apollo Multispeciality",      type:"hospital", phone:"104", dlat:0.018, dlng:0.005,  op:"24/7"},
+    {id:3, name:"District Govt Clinic",        type:"hospital", phone:"104", dlat:0.006, dlng:0.011,  op:"8AM-8PM"},
+    {id:4, name:"PHC Health Centre",           type:"hospital", phone:"104", dlat:-0.005,dlng:0.008,  op:"8AM-5PM"},
+    {id:5, name:"MedPlus Pharmacy",            type:"pharmacy", phone:null,  dlat:0.004, dlng:-0.011, op:"7AM-11PM"},
+    {id:6, name:"Apollo Pharmacy 24/7",        type:"pharmacy", phone:null,  dlat:0.014, dlng:0.017,  op:"24/7"},
+    {id:7, name:"Police Control Room",         type:"police",   phone:"100", dlat:-0.009,dlng:0.014,  op:"24/7"},
+    {id:8, name:"Fire & Rescue Station",       type:"fire",     phone:"101", dlat:-0.016,dlng:-0.007, op:"24/7"},
+    {id:9, name:"Ambulance Dispatch Centre",   type:"fire",     phone:"108", dlat:0.005, dlng:-0.013, op:"24/7"},
+    {id:10,name:"Nursing Home",                type:"hospital", phone:null,  dlat:0.009, dlng:-0.013, op:"24/7"},
+  ];
+  return pts.map(p => {
+    const sLat=lat+p.dlat, sLng=lng+p.dlng;
+    const d=haversine(lat,lng,sLat,sLng);
     return {
-      id:p.id, name:p.name, amenity:p.amenity, type:mapType(p.amenity),
-      lat:sLat, lng:sLng, distance:d, distance_text:fmtDist(d),
-      phone:p.phone, opening_hours:p.opening_hours, address:null,
+      id:p.id, name:p.name, type:p.type, amenity:p.type,
+      lat:sLat, lng:sLng,
+      distance:d,
+      distance_text: d<1 ? `${Math.round(d*1000)} m` : `${d.toFixed(1)} km`,
+      phone:p.phone, opening_hours:p.op, address:null,
     };
-  }).sort((a,b) => a.distance - b.distance);
+  }).sort((a,b)=>a.distance-b.distance);
 }
 
-const AMENITY_MAP = {
-  all:      "hospital|clinic|doctors|nursing_home|health_centre|pharmacy|police|fire_station|ambulance_station",
-  hospital: "hospital|clinic|doctors|nursing_home|health_centre",
-  police:   "police",
-  fire:     "fire_station|ambulance_station",
-  pharmacy: "pharmacy",
-};
+const fetchServices = useCallback(async (lat, lng, svcFilter = "all") => {
+  setLoadingSvc(true);
+  try {
+    const { data } = await axios.get(`${API}/api/nearby-services`, {
+      params: { lat, lng, radius: 5000, service_type: svcFilter },
+      timeout: 15000,
+    });
+    const svcs = data.services || [];
+    setServices(svcs.length > 0 ? svcs : getMock(lat, lng));
+  } catch (err) {
+    console.warn("fetchServices failed — using mock:", err.message);
+    setServices(getMock(lat, lng));
+  } finally {
+    setLoadingSvc(false);
+  }
+}, []);
 
-async function fetchFromOverpass(lat, lng, f = "all") {
-  const amenities = AMENITY_MAP[f] || AMENITY_MAP.all;
-  const query = `[out:json][timeout:20];(node["amenity"~"${amenities}"](around:5000,${lat},${lng});way["amenity"~"${amenities}"](around:5000,${lat},${lng}););out center;`;
-  const res = await fetch("https://overpass-api.de/api/interpreter", {
-    method:"POST",
-    headers:{"Content-Type":"application/x-www-form-urlencoded"},
-    body:`data=${encodeURIComponent(query)}`,
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
-  const svcs = (json.elements||[]).map(el => {
-    const tags = el.tags||{};
-    const elat = el.type==="node" ? el.lat : el.center?.lat;
-    const elng = el.type==="node" ? el.lon : el.center?.lon;
-    if (!elat||!elng) return null;
-    const d    = distKm(lat, lng, elat, elng);
-    return {
-      id:el.id, name:tags.name||tags["name:en"]||tags["name:te"]||"Emergency Service",
-      amenity:tags.amenity, type:mapType(tags.amenity),
-      lat:elat, lng:elng, distance:d, distance_text:fmtDist(d),
-      phone:tags.phone||tags["contact:phone"]||null,
-      opening_hours:tags.opening_hours||"24/7",
-      address:[tags["addr:street"],tags["addr:suburb"],tags["addr:city"]].filter(Boolean).join(", ")||null,
-    };
-  }).filter(Boolean).sort((a,b)=>a.distance-b.distance);
-  return svcs;
-}
 
 // ─────────────────────────────────────────────────────────
 const PAGE = {
