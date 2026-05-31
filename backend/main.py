@@ -8,6 +8,7 @@ Endpoints:
   GET  /api/accident-stats     analytics data
 """
 
+import traceback
 from xmlrpc import client
 
 from fastapi import FastAPI, HTTPException
@@ -192,12 +193,17 @@ out center;
             osm = resp.json()
 
     except Exception as e:
-        print("OVERPASS ERROR:", str(e))
+    import traceback
 
-    raise HTTPException(
-        status_code=500,
-        detail=f"Overpass API failed: {str(e)}"
-    )
+    print("========== OVERPASS FULL ERROR ==========")
+    traceback.print_exc()
+    print("=========================================")
+
+    return {
+        "error": str(e),
+        "services": [],
+        "source": "error"
+    }
 
 @app.get("/api/accident-stats")
 def accident_stats():
