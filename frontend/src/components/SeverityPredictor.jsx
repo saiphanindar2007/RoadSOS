@@ -4,8 +4,6 @@ import axios from "axios";
 import { Brain, Loader2, AlertTriangle, ChevronRight } from "lucide-react";
 import ServiceCard from "./ServiceCard";
 
-const API = import.meta.env.VITE_API_BASE_URL || "";
-
 const FIELDS = [
   {
     key: "road_type", label: "Road Type", icon: "🛣️",
@@ -93,7 +91,7 @@ export default function SeverityPredictor({ onResult, result, topServices, onCal
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.post(`${API}/api/predict-severity`, form);
+      const { data } = await axios.post("/api/predict-severity", form);
       onResult(data);
     } catch (e) {
       setError(e.response?.data?.detail || "Backend not reachable. Is the server running?");
