@@ -183,7 +183,7 @@ out center;
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 "https://overpass-api.de/api/interpreter",
-                data=query,
+                data={data: query},
                 headers=headers
             )
 
