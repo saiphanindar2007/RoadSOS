@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "https://roadsos-production-62ce.up.railway.app/",
+        target: "https://roadsos-production-62ce.up.railway.app",
         changeOrigin: true,
       },
     },
