@@ -188,17 +188,33 @@ export default function App() {
   }, [goldenHourStart]);
 
   // ── Service fetcher ───────────────────────────────────
-  const fetchServices = useCallback(async (lat, lng, f="all") => {
-    setLoadingSvc(true);
-    try {
-      const svcs = await fetchFromOverpass(lat, lng, f);
-      setServices(svcs.length > 0 ? svcs : getMock(lat, lng));
-    } catch {
-      setServices(getMock(lat, lng));
-    } finally {
-      setLoadingSvc(false);
+  // ── Service fetcher ───────────────────────────────────
+// ── Service fetcher — via Railway backend (reliable in prod) ─
+const fetchServices = useCallback(async (lat, lng, f = "all") => {
+  setLoadingSvc(true);
+  try {
+    // Goes through vercel.json proxy → Railway → Overpass (server-side, no CORS)
+    const { data } = await axios.get(`${API}/api/nearby-services`, {
+      params: { lat, lng, radius: 5000, service_type: f },
+      timeout: 15000,
+    });
+    const svcs = data.services || [];
+    if (svcs.length > 0) {
+      setServices(svcs);
+    } else {
+      // Fallback: apply filter to mock data
+      const mock = getMock(lat, lng);
+      setServices(f === "all" ? mock : mock.filter(s => s.type === f));
     }
-  }, []);
+  } catch (err) {
+    console.warn("fetchServices failed:", err.message);
+    // Fallback: apply filter to mock data  
+    const mock = getMock(lat, lng);
+    setServices(f === "all" ? mock : mock.filter(s => s.type === f));
+  } finally {
+    setLoadingSvc(false);
+  }
+}, []);
 
   // ── Handler when user manually grants GPS ─────────────
   const handleLocationGranted = useCallback((loc) => {
@@ -291,10 +307,12 @@ export default function App() {
   const handleShake = useCallback(() => setAutoSOSActive(true), []);
   useShakeDetect(handleShake);
 
-  const handleFilter = f => {
-    setFilter(f); filterRef.current = f;
-    if (location) fetchServices(location.lat, location.lng, f);
-  };
+  const handleFilter = useCallback((f) => {
+  setFilter(f);
+  filterRef.current = f;
+  const loc = location || lastFetchLocRef.current;
+  if (loc) fetchServices(loc.lat, loc.lng, f);
+}, [location, fetchServices]);
 
   const openService = svc => {
     setSelectedSvc(svc); setModal(true);
