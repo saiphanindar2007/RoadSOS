@@ -1,31 +1,129 @@
-# 🚨 RoadSoS — AI Emergency Response System
-### National Road Safety Hackathon 2026 | CoERS × IIT Madras
+# 🎨 RoadSoS Frontend
 
-## Live Demo
-- Frontend: [roadsos.vercel.app](https://roadsos.vercel.app)
-- Backend API: [roadsos-api.railway.app](https://roadsos-api.railway.app)
+Frontend for RoadSoS — AI-Powered Emergency Response Platform.
 
-## Features
-- 🗺️ Live location tracking with Google Maps
-- 🤖 AI accident severity prediction (Random Forest)
-- 🚑 Real-time nearby emergency services
-- 📳 Crash detection via device motion (shake-to-SOS)
-- 🎙️ Voice-activated emergency trigger
-- 📊 Admin dashboard with live SOS map
-- 🌧️ Live weather road risk integration
-- 🪪 Emergency Medical ID with QR code
+Built using React, Vite, Tailwind CSS, and Google Maps API.
 
-## Tech Stack
-- Frontend: React + Vite + Tailwind CSS + Google Maps
-- Backend: FastAPI + Python + scikit-learn
-- Database: Supabase (PostgreSQL + Auth + Realtime)
-- ML: Random Forest (accident severity prediction)
-- Maps: Google Maps JavaScript API
+---
 
-## Setup
-See `.env.example` for required environment variables.
+# 🚀 Tech Stack
 
-## Team
-- Built for: National Road Safety Hackathon 2026
-- Theme: AI in Road Safety
-- Topic: RoadSoS (Problem 3)
+* React 18
+* Vite 5
+* Tailwind CSS
+* Framer Motion
+* Google Maps JavaScript API
+* Recharts
+* Supabase SDK
+
+---
+
+# ✨ Frontend Features
+
+* Live GPS tracking
+* Nearby emergency services
+* Interactive Google Maps
+* AI prediction interface
+* Voice SOS
+* Shake detection
+* Admin dashboard
+* Analytics charts
+* Responsive design
+
+---
+
+# 📁 Folder Structure
+
+```text
+frontend/
+│
+├── src/
+├── public/
+├── components/
+├── pages/
+├── hooks/
+├── utils/
+├── package.json
+```
+
+---
+
+# ⚙️ Installation
+
+```bash
+npm install
+```
+
+---
+
+# ▶️ Run Development Server
+
+```bash
+npm run dev
+```
+
+---
+
+# 🏗️ Build Production
+
+```bash
+npm run build
+```
+
+---
+
+# 🌐 Environment Variables
+
+Create `.env` file:
+
+```env
+VITE_GOOGLE_MAPS_API_KEY=
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_API_BASE_URL=
+```
+
+---
+
+# 🗺️ Maps Integration
+
+Uses Google Maps JavaScript API for:
+
+* Live tracking
+* Navigation
+* Marker clustering
+* Emergency services display
+
+---
+
+# 📡 API Communication
+
+Frontend communicates with FastAPI backend using:
+
+```text
+/api/predict-severity
+/api/nearby-services
+/api/accident-stats
+```
+
+---
+
+# 📱 Responsive Design
+
+Optimized for:
+
+* Mobile
+* Tablet
+* Desktop
+
+---
+
+# 🚀 Deployment
+
+Hosted on Vercel with automatic GitHub CI/CD deployment.
+
+---
+
+# 📜 License
+
+Hackathon project — educational use.
