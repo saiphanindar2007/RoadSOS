@@ -193,24 +193,15 @@ export default function App() {
 const fetchServices = useCallback(async (lat, lng, f = "all") => {
   setLoadingSvc(true);
   try {
-    // Goes through vercel.json proxy → Railway → Overpass (server-side, no CORS)
     const { data } = await axios.get(`${API}/api/nearby-services`, {
       params: { lat, lng, radius: 5000, service_type: f },
       timeout: 15000,
     });
     const svcs = data.services || [];
-    if (svcs.length > 0) {
-      setServices(svcs);
-    } else {
-      // Fallback: apply filter to mock data
-      const mock = getMock(lat, lng);
-      setServices(f === "all" ? mock : mock.filter(s => s.type === f));
-    }
-  } catch (err) {
-    console.warn("fetchServices failed:", err.message);
-    // Fallback: apply filter to mock data  
-    const mock = getMock(lat, lng);
-    setServices(f === "all" ? mock : mock.filter(s => s.type === f));
+    setServices(svcs.length > 0 ? svcs
+      : (f === "all" ? getMock(lat, lng) : getMock(lat, lng).filter(s => s.type === f)));
+  } catch {
+    setServices(f === "all" ? getMock(lat, lng) : getMock(lat, lng).filter(s => s.type === f));
   } finally {
     setLoadingSvc(false);
   }
